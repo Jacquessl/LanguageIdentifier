@@ -9,6 +9,6 @@ public class AnalyzeData {
         this.dataToAnalyze = dataToAnalyze;
     }
     public String analyze(){
-        return perceptron.analyze(dataToAnalyze);
+        return "";
     }
 }

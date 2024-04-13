@@ -5,7 +5,10 @@ import java.awt.event.*;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 class MyFrame
         extends JFrame
@@ -19,20 +22,22 @@ class MyFrame
     private JButton reset;
     private JButton zbiorTestowy;
     private JTextPane tout;
-    private List<String> data;
+    private Map<String, List<String>> data;
     private boolean workerDone = true;
     private List<String> testData;
     private int testIndex;
     private int accurateTest;
     private int possibleTest;
     private boolean wypisywacDokladnosc = false;
-    private Perceptron pc;
+    private List<Perceptron> pc = new ArrayList<>();
     public MyFrame()
     {
         ReadData rd = new ReadData("C:\\Users\\litwi\\Desktop\\NAIMPP\\LanguageIdentifier\\LanguageIdentifier\\Languages");
-        data = rd.readData();;
-        Perceptron pc = new Perceptron(data);
-        //pc.teach();
+        data = rd.readData();
+
+        for(Map.Entry<String, List<String>> entry : data.entrySet()) {
+            pc.add(new Perceptron(data, entry.getKey()));
+        }
 
         setTitle("Rozpoznawanie Języka");
         setBounds(300, 90, 900, 600);
@@ -95,31 +100,37 @@ class MyFrame
     public void actionPerformed(ActionEvent e)
     {
         if (e.getSource() == sub) {
-            String dataToPrint = "Tekst: + " + tekst.getText();
+            String dataToPrint = "";
             String dataToAnalyze = tekst.getText();
-
-            pc = new Perceptron(data);
-            pc.teach();
-
-            AnalyzeData ad = new AnalyzeData(dataToAnalyze, pc);
+            Map<Double, String> results = new HashMap<>();
+            for(Perceptron percc : pc){
+                results.put(percc.analyze(dataToAnalyze), percc.getLanguage());
+            }
             try {
-                String result = ad.analyze();
-
-                dataToPrint += result + "<br>";
-                tout.setContentType("text/html");
-                if (wypisywacDokladnosc) {
-                    try {
-                        int dokladnoscDoWypisania = (accurateTest * 100) / possibleTest;
-                        tout.setText("<html><body><div style='font-family: Arial, Helvetica, sans-serif; font-size: 15pt; text-align: center;'>" + dataToPrint +
-                                "<img src=\'file:img/" + result.toLowerCase().trim() + ".jpg\'/><br>Dokladność: " + dokladnoscDoWypisania + "%</div></body></html>");
-                    }catch (IndexOutOfBoundsException ex){
-                        tout.setText("<html><body><div style='font-family: Arial, Helvetica, sans-serif; font-size: 15pt; text-align: center;'>" + dataToPrint +
-                                "<img src=\'file:img\\" + result.toLowerCase().trim() + ".jpg\'/></div></body></html>");
+                double max = 0;
+                for(Map.Entry<Double, String> entry : results.entrySet()){
+                    if(entry.getKey()>max){
+                        max = entry.getKey();
                     }
-                } else {
-                    tout.setText("<html><body><div style='font-family: Arial, Helvetica, sans-serif; font-size: 15pt; text-align: center;'>" + dataToPrint +
-                            "<img src=\'file:img\\" + result.toLowerCase().trim() + ".jpg\'/></div></body></html>");
                 }
+
+
+                dataToPrint += results.get(max);
+//                tout.setContentType("text/html");
+//                if (wypisywacDokladnosc) {
+//                    try {
+//                        int dokladnoscDoWypisania = (accurateTest * 100) / possibleTest;
+//                        tout.setText("<html><body><div style='font-family: Arial, Helvetica, sans-serif; font-size: 15pt; text-align: center;'>" + dataToPrint +
+//                                "<img src=\'file:img/" + result.toLowerCase().trim() + ".jpg\'/><br>Dokladność: " + dokladnoscDoWypisania + "%</div></body></html>");
+//                    }catch (IndexOutOfBoundsException ex){
+//                        tout.setText("<html><body><div style='font-family: Arial, Helvetica, sans-serif; font-size: 15pt; text-align: center;'>" + dataToPrint +
+//                                "<img src=\'file:img\\" + result.toLowerCase().trim() + ".jpg\'/></div></body></html>");
+//                    }
+//                } else {
+//                    tout.setText("<html><body><div style='font-family: Arial, Helvetica, sans-serif; font-size: 15pt; text-align: center;'>" + dataToPrint +
+//                            "<img src=\'file:img\\" + result.toLowerCase().trim() + ".jpg\'/></div></body></html>");
+//                }
+                tout.setText(dataToPrint);
                 tout.setEditable(false);
             }catch (NumberFormatException ex){
                 tout.setText("Wpisz wartości");
@@ -134,40 +145,40 @@ class MyFrame
             tout.setText(def);
         }
         else if(e.getSource() == zbiorTestowy) {
-            try {
-                ReadData rd = new ReadData("Languages");
-                testData = rd.readData();
-                accurateTest = 0;
-                possibleTest = 1;
-                JFormattedTextField textFields = tekst;
-                SwingWorker<Void, String> worker = new SwingWorker<Void, String>() {
-                    @Override
-                    protected Void doInBackground() throws Exception {
-                        for (String str : testData) {
-                            reset.doClick();
-                            textFields.setText(str.replace(".", ","));
-                            Thread.sleep(100);
-                            wypisywacDokladnosc = true;
-                            sub.doClick();
-                            testIndex++;
-                            possibleTest++;
-                            Thread.sleep(2000);
-
-                            wypisywacDokladnosc=false;
-                        }
-                        testIndex=0;
-                        return null;
-                    }
-
-                    @Override
-                    protected void done() {
-                        workerDone = true;
-                    }
-                };
-                worker.execute();
-            } catch (NullPointerException exc) {
-                tout.setText("Wpisz stałą uczenia");
-            }
+//            try {
+//                ReadData rd = new ReadData("Languages");
+//                testData = rd.readData();
+//                accurateTest = 0;
+//                possibleTest = 1;
+//                JFormattedTextField textFields = tekst;
+//                SwingWorker<Void, String> worker = new SwingWorker<Void, String>() {
+//                    @Override
+//                    protected Void doInBackground() throws Exception {
+//                        for (String str : testData) {
+//                            reset.doClick();
+//                            textFields.setText(str.replace(".", ","));
+//                            Thread.sleep(100);
+//                            wypisywacDokladnosc = true;
+//                            sub.doClick();
+//                            testIndex++;
+//                            possibleTest++;
+//                            Thread.sleep(2000);
+//
+//                            wypisywacDokladnosc=false;
+//                        }
+//                        testIndex=0;
+//                        return null;
+//                    }
+//
+//                    @Override
+//                    protected void done() {
+//                        workerDone = true;
+//                    }
+//                };
+////                worker.execute();
+//            } catch (NullPointerException exc) {
+//                tout.setText("Wpisz stałą uczenia");
+//            }
         }
     }
 }

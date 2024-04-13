@@ -8,7 +8,9 @@ import java.nio.file.*;
 import java.io.ByteArrayOutputStream;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import static java.nio.file.FileVisitResult.CONTINUE;
@@ -37,8 +39,8 @@ public class ReadData extends SimpleFileVisitor<Path> {
         return FileVisitResult.CONTINUE;
     }
 
-    public List<String> readData() {
-        List<String> result = new ArrayList<>();
+    public Map<String, List<String>> readData() {
+        Map<String, List<String>> result = new HashMap<>();
         for(File file : files) {
             try (
                     FileChannel inputChannel = FileChannel.open(file.toPath(), StandardOpenOption.READ);
@@ -57,7 +59,8 @@ public class ReadData extends SimpleFileVisitor<Path> {
                     buffer.clear();
                 }
                 String[] resultPath = file.getAbsolutePath().split(Pattern.quote(File.separator));
-                result.add(byteArrayOutputStream.toString(StandardCharsets.UTF_8) + " " + resultPath[resultPath.length-2]);
+                result.putIfAbsent(resultPath[resultPath.length-2].toLowerCase(), new ArrayList<>());
+                result.get(resultPath[resultPath.length-2].toLowerCase()).add(byteArrayOutputStream.toString(StandardCharsets.UTF_8).toLowerCase());
 
             } catch (IOException e) {
                 throw new RuntimeException();
