@@ -2,33 +2,35 @@ import java.util.*;
 
 public class Perceptron {
     private List<Double> wagi;
-    private Map<String, List<String>> dataToTeach;
-    private double prog = 1;
+    private Map<String, List<Map<Character, Integer>>> dataToTeach;
+    private double prog;
     private final double stalaUczenia = 0.5;
     private Map<Character, Integer> chars;
     private String language;
     private int totalChars;
-    public Perceptron(Map<String, List<String>> dataToTeach2, String language){
+    private int counterRekursji;
+    private String nextLanguage;
+    public Perceptron(Map<String, List<Map<Character, Integer>>> dataToTeach2, String language, double wagiVal){
         wagi = new ArrayList<>();
+        counterRekursji = 0;
+        prog = 2;
         chars = new LinkedHashMap<>();
         dataToTeach = new HashMap<>();
         this.language = language;
-        for(Map.Entry<String, List<String>> entry : dataToTeach2.entrySet()){
-            List<String> originalList = entry.getValue();
-            List<String> copiedList = new ArrayList<>(originalList);
+        for(Map.Entry<String, List<Map<Character, Integer>>> entry : dataToTeach2.entrySet()){
+            List<Map<Character, Integer>> originalList = entry.getValue();
+            List<Map<Character, Integer>> copiedList = new ArrayList<>(originalList);
             dataToTeach.put(entry.getKey(), copiedList);
         }
-        for(int i = 97; i<123; i++){
-            chars.put((char)i, 0);
-        }
-
         for(int i = 0; i<123-97; i++){
-            wagi.add(1.0);
+            wagi.add(2.0);
         }
-        teach();
     }
     public String getLanguage(){
         return language;
+    }
+    public void setNextLanguage(String nextLanguage){
+        this.nextLanguage = nextLanguage;
     }
     public double analyze(String data){
         float sum = 0;
@@ -47,62 +49,146 @@ public class Perceptron {
             sum += ((float)entry.getValue()/totalChars)*wagi.get(index);
             index++;
         }
-        return (sum-prog);
+//        return 1/(1+Math.pow(Math.E, (sum - prog )*-1));
+//        return sum -1 >= prog || sum +1 <= prog ? 1 : 0;
+        return sum;
     }
-    private void teach(){
+    public void teachOwnLanguage() {
         String result;
-        boolean czyJeszczeRazTeach = false;
-        List<String> strToRemove = new ArrayList<>();
-        for(Map.Entry<String, List<String>> entry : dataToTeach.entrySet()){
-            for(String str : entry.getValue()) {
-                for(char c : str.toLowerCase().toCharArray()) {
-                    if (chars.containsKey(c)) {
-                        chars.put(c, chars.get(c) + 1);
-                        totalChars++;
+        boolean czyJeszczeRaz = false;
+        for (Map.Entry<String, List<Map<Character, Integer>>> entry : dataToTeach.entrySet()) {
+            List<Map<Character, Integer>> toRemove = new ArrayList<>();
+            if (entry.getKey().equals(language)) {
+                for (Map<Character, Integer> lista : entry.getValue()) {
+                    double sum = 0;
+                    int index = 0;
+                    totalChars = 0;
+                    for (Map.Entry<Character, Integer> entr1 : lista.entrySet()) {
+                        totalChars += entr1.getValue();
                     }
-                }
-                float sum = 0;
-                int index = 0;
-                for(Map.Entry<Character, Integer> entry1 : chars.entrySet()) {
-                    sum += ((float)entry1.getValue()/totalChars)*wagi.get(index);
-                }
-                if (sum > prog) {
-                    result = language;
-                } else {
-                    result = "no " + language;
-                }
-                if ((!result.equals(language) && entry.getKey().equals(language)) || (result.equals(language) && !entry.getKey().equals(language))) {
-                    czyJeszczeRazTeach = true;
-                    int plusCzyMinus;
+                    for (Map.Entry<Character, Integer> entry1 : lista.entrySet()) {
+                        sum += ((double) entry1.getValue() / totalChars) * wagi.get(index);
+                    }
                     if (sum > prog) {
-                        plusCzyMinus = -1;
+                        result = language;
                     } else {
+                        result = nextLanguage;
+                    }
+                    if (!result.equals(language)) {
+                        czyJeszczeRaz = true;
+                        int plusCzyMinus;
+
                         plusCzyMinus = 1;
+
+                        List<Double> noweWagi = new ArrayList<>();
+                        index = 0;
+                        for (Map.Entry<Character, Integer> entry1 : lista.entrySet()) {
+                            double newWaga = wagi.get(index) + (plusCzyMinus * ((float) entry1.getValue() / totalChars) * stalaUczenia);
+
+                            noweWagi.add(newWaga);
+                            //}
+                            index++;
+                        }
+                        wagi = noweWagi;
+//                        prog += (plusCzyMinus * (-1) * stalaUczenia);
+                        toRemove.clear();
+                    } else {
+                        toRemove.add(lista);
                     }
-                    List<Double> noweWagi = new ArrayList<>();
-                    index = 0;
-                    for (Map.Entry<Character, Integer> entry1 : chars.entrySet()) {
-                        noweWagi.add(wagi.get(index) + (plusCzyMinus * ((float)entry1.getValue()/totalChars) * stalaUczenia));
-                        index++;
-                    }
-                    wagi = noweWagi;
-                    prog += (plusCzyMinus * (-1) * stalaUczenia);
-                } else {
-                    strToRemove.add(str);
                 }
+
+
+
             }
-            for(int i = 97; i<123; i++){
-                chars.put((char)i, 0);
-            }
-            totalChars = 0;
-        }
-        for(String strArr : strToRemove){
-            for(Map.Entry<String, List<String>> entry : dataToTeach.entrySet()) {
-                entry.getValue().remove(strArr);
+            for (Map<Character, Integer> remove : toRemove) {
+                entry.getValue().remove(remove);
             }
         }
-        if(czyJeszczeRazTeach){
+
+        if (czyJeszczeRaz) {
+            try {
+                teachOwnLanguage();
+            } catch (StackOverflowError e) {
+                System.out.println("cos");
+            }
+        } else if (counterRekursji < 100) {
+            teachOwnLanguage();
             teach();
+        }
+    }
+
+    public void teach(){
+        if(counterRekursji==0) {
+            teachOwnLanguage();
+        }
+        String result;
+        counterRekursji++;
+        boolean czyJeszczeRaz = false;
+        for(Map.Entry<String, List<Map<Character, Integer>>> entry : dataToTeach.entrySet()) {
+            List<Map<Character, Integer>> toRemove = new ArrayList<>();
+            if(!entry.getKey().equals(language)) {
+                for (Map<Character, Integer> lista : entry.getValue()) {
+                    double sum = 0;
+                    int index = 0;
+                    totalChars = 0;
+                    for (Map.Entry<Character, Integer> entr1 : lista.entrySet()) {
+                        totalChars += entr1.getValue();
+                    }
+                    for (Map.Entry<Character, Integer> entry1 : lista.entrySet()) {
+                        sum += ((double) entry1.getValue() / totalChars) * wagi.get(index);
+                    }
+                    if (sum > prog) {
+                        result = language;
+                    } else {
+                        result = nextLanguage;
+                    }
+                    if (result.equals(language)) {
+                        czyJeszczeRaz = true;
+                        int plusCzyMinus;
+
+                        plusCzyMinus = -1;
+
+                        List<Double> noweWagi = new ArrayList<>();
+                        index = 0;
+                        for (Map.Entry<Character, Integer> entry1 : lista.entrySet()) {
+                            double newWaga = wagi.get(index) + (plusCzyMinus * ((float) entry1.getValue() / totalChars) * stalaUczenia);
+//                            if (newWaga < 0) {
+//                                noweWagi.add(0.0);
+////                                                    }else if (newWaga > 1){
+////                                                        noweWagi.add(1.0);
+//                            } else {
+                            noweWagi.add(newWaga);
+                            //}
+                            index++;
+                        }
+                        wagi = noweWagi;
+//                        prog += (plusCzyMinus * (-1) * stalaUczenia);
+//                        if (prog < 0) {
+//                            prog = 0;
+//                        }
+                        //                    }else if (prog > 1){
+                        //                        prog = 1;
+                        //                    }
+                        toRemove.clear();
+                    }
+                    else {
+                        toRemove.add(lista);
+                    }
+                }
+
+
+            }
+            for(Map<Character, Integer> remove : toRemove){
+                entry.getValue().remove(remove);
+            }
+        }
+
+        try {
+           if(czyJeszczeRaz) {
+                teach();
+            }
+        }catch (StackOverflowError e){
+            teachOwnLanguage();
         }
     }
 }

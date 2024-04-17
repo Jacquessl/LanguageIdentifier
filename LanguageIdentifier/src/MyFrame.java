@@ -22,7 +22,7 @@ class MyFrame
     private JButton reset;
     private JButton zbiorTestowy;
     private JTextPane tout;
-    private Map<String, List<String>> data;
+    private Map<String, List<Map<Character, Integer>>> data;
     private boolean workerDone = true;
     private List<String> testData;
     private int testIndex;
@@ -34,11 +34,22 @@ class MyFrame
     {
         ReadData rd = new ReadData("C:\\Users\\litwi\\Desktop\\NAIMPP\\LanguageIdentifier\\LanguageIdentifier\\Languages");
         data = rd.readData();
-
-        for(Map.Entry<String, List<String>> entry : data.entrySet()) {
-            pc.add(new Perceptron(data, entry.getKey()));
+        double wagiVal = Math.random();
+        for(Map.Entry<String, List<Map<Character, Integer>>> entry : data.entrySet()) {
+            pc.add(new Perceptron(data, entry.getKey(), wagiVal));
         }
-
+        int index = 0;
+        for(Perceptron p : pc){
+            try {
+                p.setNextLanguage(pc.get(index - 1).getLanguage());
+                p.teach();
+                index++;
+            }catch (IndexOutOfBoundsException e){
+                p.setNextLanguage(pc.get(pc.size()-1).getLanguage());
+                p.teach();
+                index++;
+            }
+        }
         setTitle("Rozpoznawanie Języka");
         setBounds(300, 90, 900, 600);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -106,16 +117,16 @@ class MyFrame
             for(Perceptron percc : pc){
                 results.put(percc.analyze(dataToAnalyze), percc.getLanguage());
             }
-            try {
-                double max = 0;
-                for(Map.Entry<Double, String> entry : results.entrySet()){
-                    if(entry.getKey()>max){
-                        max = entry.getKey();
-                    }
+           // try {
+            double max = -10000;
+            for(Map.Entry<Double, String> entry : results.entrySet()){
+                if(entry.getKey()>max){
+                    max = entry.getKey();
                 }
+            }
 
 
-                dataToPrint += results.get(max);
+            dataToPrint += results.get(max);
 //                tout.setContentType("text/html");
 //                if (wypisywacDokladnosc) {
 //                    try {
@@ -130,13 +141,13 @@ class MyFrame
 //                    tout.setText("<html><body><div style='font-family: Arial, Helvetica, sans-serif; font-size: 15pt; text-align: center;'>" + dataToPrint +
 //                            "<img src=\'file:img\\" + result.toLowerCase().trim() + ".jpg\'/></div></body></html>");
 //                }
-                tout.setText(dataToPrint);
-                tout.setEditable(false);
-            }catch (NumberFormatException ex){
-                tout.setText("Wpisz wartości");
-                tout.setEditable(false);
+            tout.setText(dataToPrint);
+            tout.setEditable(false);
+           // }catch (NumberFormatException ex){
+                //tout.setText("Wpisz wartości");
+                //tout.setEditable(false);
 
-            }
+           // }
         }
         else if (e.getSource() == reset) {
 

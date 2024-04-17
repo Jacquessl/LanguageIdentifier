@@ -7,10 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.io.ByteArrayOutputStream;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import static java.nio.file.FileVisitResult.CONTINUE;
@@ -39,8 +36,8 @@ public class ReadData extends SimpleFileVisitor<Path> {
         return FileVisitResult.CONTINUE;
     }
 
-    public Map<String, List<String>> readData() {
-        Map<String, List<String>> result = new HashMap<>();
+    public Map<String, List<Map<Character, Integer>>> readData() {
+        Map<String, List<Map<Character, Integer>>> result = new HashMap<>();
         for(File file : files) {
             try (
                     FileChannel inputChannel = FileChannel.open(file.toPath(), StandardOpenOption.READ);
@@ -60,7 +57,16 @@ public class ReadData extends SimpleFileVisitor<Path> {
                 }
                 String[] resultPath = file.getAbsolutePath().split(Pattern.quote(File.separator));
                 result.putIfAbsent(resultPath[resultPath.length-2].toLowerCase(), new ArrayList<>());
-                result.get(resultPath[resultPath.length-2].toLowerCase()).add(byteArrayOutputStream.toString(StandardCharsets.UTF_8).toLowerCase());
+                Map<Character, Integer> chars = new LinkedHashMap<>();
+                for (int i = 97; i < 123; i++) {
+                    chars.put((char) i, 0);
+                }
+                for (char c : byteArrayOutputStream.toString(StandardCharsets.UTF_8).toLowerCase().toLowerCase().toCharArray()) {
+                    if (chars.containsKey(c)) {
+                        chars.put(c, chars.get(c) + 1);
+                    }
+                }
+                result.get(resultPath[resultPath.length-2].toLowerCase()).add(chars);
 
             } catch (IOException e) {
                 throw new RuntimeException();
