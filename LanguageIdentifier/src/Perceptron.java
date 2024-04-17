@@ -103,7 +103,6 @@ public class Perceptron {
             try {
                 teachOwnLanguage();
             } catch (StackOverflowError e) {
-                System.out.println("COS");
             }
         }
     }
@@ -180,7 +179,6 @@ public class Perceptron {
                 teach();
             }
         }catch (StackOverflowError e){
-            System.out.println(":cos");
             teachOwnLanguage();
         }
     }

@@ -5,10 +5,8 @@ import java.awt.event.*;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 class MyFrame
         extends JFrame
@@ -17,18 +15,14 @@ class MyFrame
     private Container c;
     private JLabel title;
     private JLabel name;
-    private JFormattedTextField tekst;
+    private JTextArea tekst;
+    private JScrollPane tekstScroll;
     private JButton sub;
     private JButton reset;
     private JButton zbiorTestowy;
     private JTextPane tout;
     private Map<String, List<Map<Character, Integer>>> data;
-    private boolean workerDone = true;
-    private List<String> testData;
-    private int testIndex;
-    private int accurateTest;
-    private int possibleTest;
-    private boolean wypisywacDokladnosc = false;
+
     private List<Perceptron> pc = new ArrayList<>();
     public MyFrame()
     {
@@ -64,19 +58,23 @@ class MyFrame
         title.setLocation(250, 30);
         c.add(title);
 
-        name = new JLabel("Długość Listka (cm)");
+        name = new JLabel("Tekst");
         name.setFont(new Font("Arial", Font.PLAIN, 20));
-        name.setSize(180, 30);
+        name.setSize(80, 30);
         name.setLocation(20, 100);
         c.add(name);
-
-        tekst = new JFormattedTextField();
+        tekst = new JTextArea();
         tekst.setFont(new Font("Arial", Font.PLAIN, 15));
-        tekst.setSize(190, 300);
-        tekst.setLocation(220, 100);
-        c.add(tekst);
+        tekst.setLineWrap(true);
+        tekst.setWrapStyleWord(true);
+        tekst.setMargin(new Insets(10, 10, 10, 10));
 
 
+        tekstScroll = new JScrollPane(tekst);
+        tekstScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        tekstScroll.setSize(290, 300);
+        tekstScroll.setLocation(120, 100);
+        c.add(tekstScroll);
         sub = new JButton("Analizuj");
         sub.setFont(new Font("Arial", Font.PLAIN, 15));
         sub.setSize(100, 20);
@@ -127,7 +125,9 @@ class MyFrame
 
 
             dataToPrint += results.get(max);
-//                tout.setContentType("text/html");
+
+            String countryCode = getCode(dataToPrint);
+
 //                if (wypisywacDokladnosc) {
 //                    try {
 //                        int dokladnoscDoWypisania = (accurateTest * 100) / possibleTest;
@@ -138,10 +138,13 @@ class MyFrame
 //                                "<img src=\'file:img\\" + result.toLowerCase().trim() + ".jpg\'/></div></body></html>");
 //                    }
 //                } else {
-//                    tout.setText("<html><body><div style='font-family: Arial, Helvetica, sans-serif; font-size: 15pt; text-align: center;'>" + dataToPrint +
-//                            "<img src=\'file:img\\" + result.toLowerCase().trim() + ".jpg\'/></div></body></html>");
+
+            tout.setContentType("text/html");
+                    tout.setText("<html><head><meta charset=\"UTF-8\"></head><body style='font-family: Arial, Helvetica, sans-serif; font-size: 15pt; text-align: center;'><h1>" + dataToPrint.substring(0,1).toUpperCase() + "" + dataToPrint.substring(1) + "</h1><div>"+
+                            "<img src=\"https://flagsapi.com/" + countryCode + "/shiny/64.png\"/></div></body></html>");
 //                }
-            tout.setText(dataToPrint);
+            System.out.println(tout.getText());
+            //tout.setText();
             tout.setEditable(false);
            // }catch (NumberFormatException ex){
                 //tout.setText("Wpisz wartości");
@@ -191,5 +194,18 @@ class MyFrame
 //                tout.setText("Wpisz stałą uczenia");
 //            }
         }
+    }
+    private String getCode(String dataToPrint){
+        String countryCode = "";
+        for(Locale avaliable : Locale.getAvailableLocales()){
+            if(avaliable.getDisplayLanguage().toLowerCase().equals(dataToPrint)) {
+                if (avaliable.getDisplayCountry(Locale.ENGLISH).equals("United Kingdom") || !avaliable.getDisplayLanguage(Locale.ENGLISH).equals("English")) {
+                    if(!avaliable.getCountry().equals(""))
+                        return avaliable.getCountry();
+                    System.out.println(avaliable.getCountry() + "-");
+                }
+            }
+        }
+        return countryCode;
     }
 }
