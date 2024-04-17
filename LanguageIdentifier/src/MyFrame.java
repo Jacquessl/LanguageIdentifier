@@ -143,7 +143,6 @@ class MyFrame
                     tout.setText("<html><head><meta charset=\"UTF-8\"></head><body style='font-family: Arial, Helvetica, sans-serif; font-size: 15pt; text-align: center;'><h1>" + dataToPrint.substring(0,1).toUpperCase() + "" + dataToPrint.substring(1) + "</h1><div>"+
                             "<img src=\"https://flagsapi.com/" + countryCode + "/shiny/64.png\"/></div></body></html>");
 //                }
-            System.out.println(tout.getText());
             //tout.setText();
             tout.setEditable(false);
            // }catch (NumberFormatException ex){
@@ -202,7 +201,6 @@ class MyFrame
                 if (avaliable.getDisplayCountry(Locale.ENGLISH).equals("United Kingdom") || !avaliable.getDisplayLanguage(Locale.ENGLISH).equals("English")) {
                     if(!avaliable.getCountry().equals(""))
                         return avaliable.getCountry();
-                    System.out.println(avaliable.getCountry() + "-");
                 }
             }
         }
