@@ -4,7 +4,7 @@ public class Perceptron {
     private List<Double> wagi;
     private Map<String, List<Map<Character, Integer>>> dataToTeach;
     private double prog;
-    private final double stalaUczenia = 0.5;
+    private final double stalaUczenia = Math.random() *0.1;
     private Map<Character, Integer> chars;
     private String language;
     private int totalChars;
@@ -13,7 +13,7 @@ public class Perceptron {
     public Perceptron(Map<String, List<Map<Character, Integer>>> dataToTeach2, String language, double wagiVal){
         wagi = new ArrayList<>();
         counterRekursji = 0;
-        prog = 2;
+        prog = 10;
         chars = new LinkedHashMap<>();
         dataToTeach = new HashMap<>();
         this.language = language;
@@ -55,9 +55,9 @@ public class Perceptron {
     }
     public void teachOwnLanguage() {
         String result;
+        counterRekursji++;
         boolean czyJeszczeRaz = false;
         for (Map.Entry<String, List<Map<Character, Integer>>> entry : dataToTeach.entrySet()) {
-            List<Map<Character, Integer>> toRemove = new ArrayList<>();
             if (entry.getKey().equals(language)) {
                 for (Map<Character, Integer> lista : entry.getValue()) {
                     double sum = 0;
@@ -90,30 +90,21 @@ public class Perceptron {
                             index++;
                         }
                         wagi = noweWagi;
-//                        prog += (plusCzyMinus * (-1) * stalaUczenia);
-                        toRemove.clear();
-                    } else {
-                        toRemove.add(lista);
+                        prog += (plusCzyMinus * (-1) * stalaUczenia);
                     }
                 }
 
 
 
             }
-            for (Map<Character, Integer> remove : toRemove) {
-                entry.getValue().remove(remove);
-            }
-        }
 
+        }
         if (czyJeszczeRaz) {
             try {
                 teachOwnLanguage();
             } catch (StackOverflowError e) {
-                System.out.println("cos");
+                System.out.println("COS");
             }
-        } else if (counterRekursji < 100) {
-            teachOwnLanguage();
-            teach();
         }
     }
 
@@ -124,8 +115,8 @@ public class Perceptron {
         String result;
         counterRekursji++;
         boolean czyJeszczeRaz = false;
+        List<Map<Character, Integer>> toRemove = new ArrayList<>();
         for(Map.Entry<String, List<Map<Character, Integer>>> entry : dataToTeach.entrySet()) {
-            List<Map<Character, Integer>> toRemove = new ArrayList<>();
             if(!entry.getKey().equals(language)) {
                 for (Map<Character, Integer> lista : entry.getValue()) {
                     double sum = 0;
@@ -152,17 +143,12 @@ public class Perceptron {
                         index = 0;
                         for (Map.Entry<Character, Integer> entry1 : lista.entrySet()) {
                             double newWaga = wagi.get(index) + (plusCzyMinus * ((float) entry1.getValue() / totalChars) * stalaUczenia);
-//                            if (newWaga < 0) {
-//                                noweWagi.add(0.0);
-////                                                    }else if (newWaga > 1){
-////                                                        noweWagi.add(1.0);
-//                            } else {
+
                             noweWagi.add(newWaga);
-                            //}
                             index++;
                         }
                         wagi = noweWagi;
-//                        prog += (plusCzyMinus * (-1) * stalaUczenia);
+                        prog += (plusCzyMinus * (-1) * stalaUczenia);
 //                        if (prog < 0) {
 //                            prog = 0;
 //                        }
@@ -172,22 +158,29 @@ public class Perceptron {
                         toRemove.clear();
                     }
                     else {
-                        toRemove.add(lista);
+                        if(Math.random()<0.1) {
+                            toRemove.add(lista);
+                        }
                     }
                 }
 
 
             }
+        }
+        for(Map.Entry<String, List<Map<Character, Integer>>> entry : dataToTeach.entrySet()){
             for(Map<Character, Integer> remove : toRemove){
                 entry.getValue().remove(remove);
             }
         }
-
         try {
            if(czyJeszczeRaz) {
+               if(Math.random()<0.1){
+                   teachOwnLanguage();
+               }
                 teach();
             }
         }catch (StackOverflowError e){
+            System.out.println(":cos");
             teachOwnLanguage();
         }
     }
